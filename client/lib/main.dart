@@ -5,12 +5,18 @@ import 'core/models/bess_state.dart';
 import 'core/models/community_state.dart';
 import 'core/models/grid_state.dart';
 import 'core/models/wallet_state.dart';
+import 'core/notification_service.dart';
 import 'core/websocket_service.dart';
 import 'features/auth/wallet_connect_screen.dart';
 import 'features/community/community_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/grid/grid_topology_screen.dart';
 import 'features/map/singularity_map_screen.dart';
+
+/// Module-level tab index notifier — shared between [AppShell] and
+/// [NotificationService] so a notification tap can navigate to any tab
+/// without needing a [BuildContext].
+final tabIndexNotifier = ValueNotifier<int>(0);
 
 /// Application entry point.
 ///
@@ -29,6 +35,11 @@ void main() async {
   // Restore persisted wallet address before the first frame is rendered so
   // the auth gate shows the correct screen without a visible flash.
   await walletNotifier.loadPersistedSession();
+
+  // --- Notifications ---
+  // Pass the module-level tabIndexNotifier so notification taps can switch
+  // tabs without requiring a BuildContext.
+  await NotificationService.instance.initialize(tabIndexNotifier);
 
   // --- Notifiers ---
   // BESSStateNotifier owns the WebSocket connection (calls ws.connect()).
@@ -121,6 +132,26 @@ class _AppShellState extends State<AppShell> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Listen for notification-driven tab changes from [NotificationService].
+    tabIndexNotifier.addListener(_onTabIndexChanged);
+  }
+
+  @override
+  void dispose() {
+    tabIndexNotifier.removeListener(_onTabIndexChanged);
+    super.dispose();
+  }
+
+  void _onTabIndexChanged() {
+    final next = tabIndexNotifier.value;
+    if (next != _selectedIndex && mounted) {
+      setState(() => _selectedIndex = next);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
@@ -129,7 +160,10 @@ class _AppShellState extends State<AppShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        onDestinationSelected: (i) {
+          setState(() => _selectedIndex = i);
+          tabIndexNotifier.value = i;
+        },
         backgroundColor: const Color(0xFF111122),
         indicatorColor: Colors.indigo.withAlpha(80),
         destinations: [

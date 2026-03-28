@@ -28,6 +28,10 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
   late AnimationController _pulseCtrl;
   late Animation<double> _pulseAnim;
 
+  // Flow animation — drives the animated BESS→load energy flow polylines.
+  late AnimationController _flowCtrl;
+  late Animation<double> _flowAnim;
+
   @override
   void initState() {
     super.initState();
@@ -38,11 +42,20 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
     _pulseAnim = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
+
+    _flowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+    _flowAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _flowCtrl, curve: Curves.linear),
+    );
   }
 
   @override
   void dispose() {
     _pulseCtrl.dispose();
+    _flowCtrl.dispose();
     _mapController.dispose();
     super.dispose();
   }
@@ -82,6 +95,14 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
                   // ── Power lines ─────────────────────────────────────────
                   PolylineLayer(
                     polylines: _buildPolylines(topo),
+                  ),
+
+                  // ── Animated BESS→Load energy flow lines ────────────────
+                  AnimatedBuilder(
+                    animation: _flowAnim,
+                    builder: (_, __) => PolylineLayer(
+                      polylines: _buildFlowPolylines(topo, _flowAnim.value),
+                    ),
                   ),
 
                   // ── Bus markers ─────────────────────────────────────────
@@ -175,6 +196,39 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
           strokeWidth: 2.5,
         ));
       }
+    }
+
+    return polylines;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Animated flow polylines (BESS → Critical Load during emergency)
+  // ---------------------------------------------------------------------------
+
+  List<Polyline> _buildFlowPolylines(
+    GridTopologyNotifier topo,
+    double animValue,
+  ) {
+    final polylines = <Polyline>[];
+
+    for (final flow in topo.feedingFlows) {
+      final fromCoord = BusGeoData.coordinates[flow.fromBus];
+      final toCoord = BusGeoData.coordinates[flow.toBus];
+      if (fromCoord == null || toCoord == null) continue;
+
+      // Animated glow line — strokes wider and more opaque as animValue → 1.
+      polylines.add(Polyline(
+        points: [fromCoord, toCoord],
+        color: Colors.greenAccent.withAlpha((animValue * 200).toInt()),
+        strokeWidth: 2.0 + animValue * 3.0,
+      ));
+
+      // Thin white core for a "light beam" effect.
+      polylines.add(Polyline(
+        points: [fromCoord, toCoord],
+        color: Colors.white.withAlpha((animValue * 80).toInt()),
+        strokeWidth: 1.0,
+      ));
     }
 
     return polylines;

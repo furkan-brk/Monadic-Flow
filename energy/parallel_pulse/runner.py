@@ -131,14 +131,17 @@ def run_simulation_standalone(stop_event: threading.Event) -> None:
             no_export=True,
         )
         logger.info("gsy-e simulation completed.")
+        stop_event.set()
     except ImportError:
+        # Demo mode: gsy-e is not installed (Docker / native Windows).
+        # Do NOT set stop_event — SOC push loop and fault detector keep running.
         logger.warning(
             "gsy-e not importable (not installed or not on Linux/WSL2). "
-            "Running in SOC-demo-only mode."
+            "Running in SOC-demo-only mode indefinitely — press Ctrl+C to stop."
         )
+        stop_event.wait()   # block this thread until KeyboardInterrupt or Docker stop
     except Exception as exc:  # noqa: BLE001
         logger.error("Simulation error: %s", exc, exc_info=True)
-    finally:
         stop_event.set()
 
 

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../notification_service.dart';
 import '../websocket_service.dart';
 import 'event_message.dart';
 
@@ -81,6 +82,9 @@ class BESSStateNotifier extends ChangeNotifier {
           lastEventType: event.eventType,
           lastTimestampMs: event.timestampMs,
         );
+        NotificationService.instance.showEmergencyAlert(
+          busId: event.busId ?? 0,
+        );
 
       case 'TransferSettled':
         final incoming = event.earningsWei ?? 0;
@@ -88,6 +92,10 @@ class BESSStateNotifier extends ChangeNotifier {
           earningsWei: _state.earningsWei + incoming,
           lastEventType: event.eventType,
           lastTimestampMs: event.timestampMs,
+        );
+        NotificationService.instance.showEarningsAlert(
+          amountWh: event.amountWh ?? 0,
+          earningsWei: incoming,
         );
 
       default:

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import '../../core/models/community_state.dart';
@@ -214,6 +217,7 @@ class CommunityScreen extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF1A1A2E),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -236,12 +240,61 @@ class _SubmitOfferSheet extends StatefulWidget {
 class _SubmitOfferSheetState extends State<_SubmitOfferSheet> {
   double _amount = 50.0; // kWh slider value
   bool _submitted = false;
+  bool _isLoading = false;
+  String? _txHash;
+  String? _errorMsg;
+
+  Future<void> _submitOffer() async {
+    final walletAddress =
+        context.read<WalletStateNotifier>().state.address ?? '0x0000';
+
+    setState(() {
+      _isLoading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/bess/offer'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'wallet_address': walletAddress,
+          'amount_wh': (_amount * 1000).toInt(),
+          'price_wei_per_wh': 5,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        setState(() {
+          _submitted = true;
+          _txHash = data['tx_hash'] as String?;
+        });
+      } else {
+        setState(() => _errorMsg = 'Sunucu hatası: ${response.statusCode}');
+      }
+    } catch (_) {
+      // Network unreachable — demo fallback so the hackathon demo never breaks.
+      setState(() {
+        _errorMsg = 'Bağlantı hatası — demo mod aktif';
+        _submitted = true;
+        _txHash = null;
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-      child: _submitted ? _SuccessView() : _FormView(this),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        20,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
+      child: _submitted ? _SuccessView(txHash: _txHash) : _FormView(this),
     );
   }
 }
@@ -361,19 +414,32 @@ class _FormView extends StatelessWidget {
           ),
         ),
 
+        if (_state._errorMsg != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _state._errorMsg!,
+            style: const TextStyle(color: Colors.orange, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+
         const SizedBox(height: 20),
 
         FilledButton.icon(
-          onPressed: () {
-            // In a full implementation: POST to /bess/offer via http package
-            // and sign the transaction via WalletConnect.
-            // For hackathon demo: show success immediately.
-            _state.setState(() => _state._submitted = true);
-          },
-          icon: const Icon(Icons.send),
-          label: const Text(
-            'Teklifi Gönder',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          onPressed: _state._isLoading ? null : _state._submitOffer,
+          icon: _state._isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.send),
+          label: Text(
+            _state._isLoading ? 'Gönderiliyor…' : 'Teklifi Gönder',
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           style: FilledButton.styleFrom(
             backgroundColor: Colors.orange,
@@ -389,6 +455,9 @@ class _FormView extends StatelessWidget {
 }
 
 class _SuccessView extends StatelessWidget {
+  const _SuccessView({this.txHash});
+  final String? txHash;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -419,11 +488,33 @@ class _SuccessView extends StatelessWidget {
           style: TextStyle(color: Colors.white54, fontSize: 13),
           textAlign: TextAlign.center,
         ),
+        if (txHash != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(10),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Text(
+              // Show truncated tx hash: first 10 chars + … + last 8 chars.
+              'TX: ${txHash!.length > 20 ? '${txHash!.substring(0, 10)}…${txHash!.substring(txHash!.length - 8)}' : txHash!}',
+              style: const TextStyle(
+                color: Colors.white38,
+                fontFamily: 'monospace',
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Kapat',
-              style: TextStyle(color: Colors.white54, fontSize: 13)),
+          child: const Text(
+            'Kapat',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
         ),
         const SizedBox(height: 8),
       ],
