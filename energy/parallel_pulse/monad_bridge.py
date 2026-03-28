@@ -301,13 +301,13 @@ class MonadBridge:
 def from_env() -> MonadBridge:
     """Construct a MonadBridge from environment variables.
 
-    Required environment variables:
-        MONAD_RPC_URL: Monad RPC endpoint.
+    Required environment variables (read from project-root .env or shell):
+        RPC_URL:          Monad / Anvil HTTP RPC endpoint.
         CONTRACT_ADDRESS: Deployed EnergyMarket address.
-        PRIVATE_KEY: Hex-encoded private key (with or without 0x prefix).
+        PRIVATE_KEY:      Hex-encoded private key (with or without 0x prefix).
     """
     return MonadBridge(
-        rpc_url=os.environ["MONAD_RPC_URL"],
+        rpc_url=os.environ["RPC_URL"],
         contract_address=os.environ["CONTRACT_ADDRESS"],
         private_key=os.environ["PRIVATE_KEY"],
     )

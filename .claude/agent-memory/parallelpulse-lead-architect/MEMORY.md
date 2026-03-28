@@ -3,3 +3,5 @@
 - [Inter-Layer Schema](project_schema.md) — EventMessage JSON schema crossing all 4 layers
 - [Docker Compose Architecture](project_docker.md) — Compose services, Dockerfiles, profiles, and startup commands
 - [Sprint 2 Grid Viz](project_sprint2.md) — IEEE 33-bus topology screen, GridStatusUpdate event, BottomNav shell, all new/modified files
+- [Sprint 3 Wallet Auth + Community Hub](project_sprint3.md) — Wallet auth gate, CommunityFeedNotifier, Community BottomNav tab, file list, risks
+- [Sprint 4 Singularity Map Integration](project_sprint4.md) — Geo-map tab, community settings screen, savings KPI card, trade profile chart; flutter_map + OSM, no API key

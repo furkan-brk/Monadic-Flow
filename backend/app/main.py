@@ -7,8 +7,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Head
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .models import BESSStateResponse, EventMessage, SOCUpdatePayload
+from .models import BESSStateResponse, EventMessage, OfferPayload, SOCUpdatePayload
 from .grid_topology import build_grid_status_update, bess_address_to_bus
+from .community import get_community_state
 
 # web3 is optional on Windows (ckzg build requires MSVC).
 # Chain listener is disabled automatically when web3 is unavailable.
@@ -270,3 +271,165 @@ async def health() -> dict:
         "connected_clients": len(connected_websockets),
         "bess_soc": _bess_soc_by_bus,
     }
+
+
+# ---------------------------------------------------------------------------
+# Sprint 3: Community REST endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get("/community/stats")
+async def get_community_stats() -> dict:
+    """Return aggregated energy community statistics for the current session.
+
+    These are in-memory accumulators reset on each backend restart.
+    Consumed by the Flutter CommunityScreen on initial load.
+    """
+    state = get_community_state()
+    return state.to_stats_dict()
+
+
+@app.get("/community/leaderboard")
+async def get_community_leaderboard() -> dict:
+    """Return the top BESS providers sorted by cumulative earnings (desc).
+
+    Each entry contains: address, earnings_wei, total_energy_wh, rank.
+    """
+    state = get_community_state()
+    return {
+        "leaderboard": state.sorted_leaderboard(),
+        "settlement_count": state.settlement_count,
+    }
+
+
+@app.get("/community/feed")
+async def get_community_feed(limit: int = 20) -> dict:
+    """Return the most recent energy transfer records.
+
+    Args:
+        limit: Maximum number of records to return (default 20, max 50).
+    """
+    state = get_community_state()
+    return {"transfers": state.recent_transfers(limit=min(limit, 50))}
+
+
+@app.post("/bess/offer")
+async def submit_bess_offer(payload: OfferPayload) -> dict:
+    """BESS owner submits an energy offer during emergency mode.
+
+    Two-tier execution:
+      1) If contract + BESS_PRIVATE_KEY are configured → real on-chain TX via
+         ``submitEnergyOffer(amount, price)``.
+      2) Otherwise → deterministic demo tx_hash so the UI flow still works.
+
+    Always broadcasts an ``OfferSubmitted`` WebSocket event to all clients.
+    """
+    import re
+    import hashlib
+
+    # Basic address format validation.
+    if not re.fullmatch(r"0x[0-9a-fA-F]{40}", payload.wallet_address):
+        raise HTTPException(status_code=400, detail="Invalid Ethereum address format.")
+    if payload.amount_wh <= 0:
+        raise HTTPException(status_code=400, detail="amount_wh must be positive.")
+
+    timestamp_ms = int(time.time() * 1000)
+    bess_private_key = __import__("os").getenv("BESS_PRIVATE_KEY", "")
+
+    tx_hash: str
+    status: str
+
+    if contract is not None and bess_private_key:
+        # Real on-chain submission.
+        try:
+            loop = asyncio.get_event_loop()
+            tx_hash_bytes = await loop.run_in_executor(
+                None,
+                lambda: w3.eth.send_raw_transaction(
+                    w3.eth.account.sign_transaction(
+                        contract.functions.submitEnergyOffer(
+                            payload.amount_wh,
+                            payload.price_wei_per_wh,
+                        ).build_transaction({
+                            "from": payload.wallet_address,
+                            "nonce": w3.eth.get_transaction_count(payload.wallet_address),
+                            "gas": 150_000,
+                            "gasPrice": w3.eth.gas_price,
+                        }),
+                        bess_private_key,
+                    ).rawTransaction
+                ),
+            )
+            tx_hash = tx_hash_bytes.hex()
+            status = "submitted"
+        except Exception as exc:
+            logger.warning("Real TX failed (%s); falling back to demo hash.", exc)
+            tx_hash = "0x" + hashlib.sha256(
+                f"{payload.wallet_address}{payload.amount_wh}{timestamp_ms}".encode()
+            ).hexdigest()
+            status = "demo"
+    else:
+        # Demo mode — deterministic hash.
+        tx_hash = "0x" + hashlib.sha256(
+            f"{payload.wallet_address}{payload.amount_wh}{timestamp_ms}".encode()
+        ).hexdigest()
+        status = "demo"
+
+    # Broadcast OfferSubmitted event to all WS clients.
+    offer_msg = EventMessage(
+        event_type="OfferSubmitted",
+        bess_address=payload.wallet_address,
+        amount_wh=payload.amount_wh,
+        timestamp_ms=timestamp_ms,
+    )
+    await _broadcast(offer_msg.model_dump_json())
+    logger.info(
+        "OfferSubmitted: wallet=%s amount=%d Wh price=%d wei/Wh tx=%s status=%s",
+        payload.wallet_address,
+        payload.amount_wh,
+        payload.price_wei_per_wh,
+        tx_hash[:18] + "…",
+        status,
+    )
+
+    return {
+        "tx_hash": tx_hash,
+        "status": status,
+        "wallet_address": payload.wallet_address,
+        "amount_wh": payload.amount_wh,
+        "price_wei_per_wh": payload.price_wei_per_wh,
+        "timestamp_ms": timestamp_ms,
+    }
+
+
+@app.post("/internal/emergency", status_code=200)
+async def post_emergency_signal(
+    x_internal_token: str = Header(default=""),
+) -> dict:
+    """Trigger emergency mode from the Python simulation runner.
+
+    Called by energy/parallel_pulse/monad_bridge.py when a fault is detected.
+    Broadcasts EmergencyActivated + CommunityUpdate to all WebSocket clients.
+    """
+    if x_internal_token != settings.internal_token:
+        raise HTTPException(status_code=401, detail="Invalid internal token.")
+
+    timestamp_ms = int(time.time() * 1000)
+
+    # 1. Broadcast EmergencyActivated
+    emergency_msg = EventMessage(
+        event_type="EmergencyActivated",
+        emergency_mode=True,
+        timestamp_ms=timestamp_ms,
+    )
+    await _broadcast(emergency_msg.model_dump_json())
+
+    # 2. Update community state
+    community = get_community_state()
+    community.activate_emergency()
+    community_payload = community.build_event_payload()
+    community_msg = EventMessage(**community_payload)
+    await _broadcast(community_msg.model_dump_json())
+
+    logger.info("Emergency activated via /internal/emergency")
+    return {"status": "broadcast", "clients": len(connected_websockets)}

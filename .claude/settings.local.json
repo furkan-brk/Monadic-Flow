@@ -40,7 +40,11 @@
       "Bash(grep -E \"\\\\.\\(py\\)$\")",
       "Bash(find /c/Projeler/Monadic-Flow/energy -name \"*.py\" -exec grep -l \"^class Trade\\\\|^class Offer\" {})",
       "Read(//mnt/c/Projeler/Monadic-Flow/**)",
-      "Read(//mnt/c/Projeler/Monadic-Flow/energy/**)"
+      "Read(//mnt/c/Projeler/Monadic-Flow/energy/**)",
+      "WebFetch(domain:gridsingularity.github.io)",
+      "Bash(docker compose:*)",
+      "Bash(find /c/Projeler/Monadic-Flow/contracts/test -type f -name *.sol)",
+      "Bash(find /c/Projeler/Monadic-Flow/client -name *.dart -type f)"
     ]
   }
 }

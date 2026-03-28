@@ -1,4 +1,10 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+# Project root = backend/app/../../.. = Monadic-Flow/
+# Both Docker (WORKDIR /app) and local-dev paths resolve correctly via __file__.
+_ROOT_ENV = Path(__file__).parent.parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -13,7 +19,9 @@ class Settings(BaseSettings):
     bess_a_address: str = "0x0000000000000000000000000000000000000002"
 
     class Config:
-        env_file = ".env"
+        # Single source of truth: project-root .env
+        # Falls back to shell environment variables when file is absent (Docker).
+        env_file = str(_ROOT_ENV)
 
 
 settings = Settings()

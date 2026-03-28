@@ -132,9 +132,11 @@ class ChainEventListener:
                 logger.warning("Error processing chain event entry: %s", exc)
 
     async def _handle_emergency(self, entry: dict) -> None:
-        """Process EmergencyActivated log: broadcast primary event + GridStatusUpdate."""
+        """Process EmergencyActivated log: broadcast primary event + GridStatusUpdate
+        + CommunityUpdate."""
         from .models import EventMessage
         from .grid_topology import build_grid_status_update
+        from .community import get_community_state
 
         args = entry.get("args", {})
         bus_id = int(args.get("busId", 0))
@@ -159,6 +161,14 @@ class ChainEventListener:
         grid_msg = EventMessage(**grid_payload)
         await self._broadcast(grid_msg.model_dump_json())
         logger.info("GridStatusUpdate emitted for EmergencyActivated bus_id=%d", bus_id)
+
+        # 3. CommunityUpdate — flag emergency in community state
+        community = get_community_state()
+        community.activate_emergency()
+        community_payload = community.build_event_payload()
+        community_msg = EventMessage(**community_payload)
+        await self._broadcast(community_msg.model_dump_json())
+        logger.info("CommunityUpdate emitted for EmergencyActivated")
 
     async def _handle_transfer(self, entry: dict) -> None:
         """Process TransferSettled log: broadcast primary event + GridStatusUpdate."""
@@ -203,3 +213,23 @@ class ChainEventListener:
         grid_msg = EventMessage(**grid_payload)
         await self._broadcast(grid_msg.model_dump_json())
         logger.info("GridStatusUpdate emitted for TransferSettled bess_bus=%s", bess_bus)
+
+        # 3. CommunityUpdate — aggregate this transfer into community stats
+        from .community import get_community_state
+
+        community = get_community_state()
+        community.record_transfer(
+            bess_address=bess_address or "0x0000000000000000000000000000000000000000",
+            load_address=load_address or "0x0000000000000000000000000000000000000000",
+            amount_wh=amount_wh,
+            earnings_wei=cost_wei,
+        )
+        community_payload = community.build_event_payload()
+        community_msg = EventMessage(**community_payload)
+        await self._broadcast(community_msg.model_dump_json())
+        logger.info(
+            "CommunityUpdate emitted: total_energy=%d Wh, bess_count=%d, settlements=%d",
+            community.total_energy_wh,
+            community.active_bess_count,
+            community.settlement_count,
+        )

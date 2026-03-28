@@ -4,8 +4,16 @@ import 'package:flutter/material.dart';
 ///
 /// The banner fades between 70 % and 100 % opacity using a repeating
 /// reverse animation to draw the operator's attention.
+///
+/// Optionally accepts an [onTeklifVer] callback — when provided, a
+/// "Teklif Ver →" action button is shown on the right side of the banner so
+/// operators can jump straight to the offer sheet from any screen.
 class EmergencyBanner extends StatefulWidget {
-  const EmergencyBanner({super.key});
+  const EmergencyBanner({super.key, this.onTeklifVer});
+
+  /// Called when the user taps the "Teklif Ver" CTA inside the banner.
+  /// If null, no CTA is rendered (banner stays display-only).
+  final VoidCallback? onTeklifVer;
 
   @override
   State<EmergencyBanner> createState() => _EmergencyBannerState();
@@ -49,20 +57,48 @@ class _EmergencyBannerState extends State<EmergencyBanner>
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         color: Colors.red[700],
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            Text(
-              '\u26a0\ufe0f EMERGENCY MODE ACTIVE \u2014 5\u00d7 Pricing',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+            // ── Warning text ──────────────────────────────────────────────
+            const Expanded(
+              child: Text(
+                '⚠️ ACİL MOD — 5× Fiyat Aktif',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
+
+            // ── CTA button (only when callback provided) ──────────────────
+            if (widget.onTeklifVer != null)
+              TextButton.icon(
+                onPressed: widget.onTeklifVer,
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withAlpha(30),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: const BorderSide(color: Colors.white38, width: 1),
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                icon: const Icon(Icons.offline_bolt, size: 14),
+                label: const Text(
+                  'Teklif Ver →',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

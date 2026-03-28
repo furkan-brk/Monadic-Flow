@@ -1,27 +1,22 @@
-# ParallelPulse — Docker Compose (Development + Production)
+# ParallelPulse — Docker Compose
 #
-# ─── Usage ─────────────────────────────────────────────────────────────────────
+# ─── Kullanım ──────────────────────────────────────────────────────────────────
 #
-#  Dev mode  (local Anvil EVM, deterministic contract address):
-#    docker compose --profile dev up --build
+#  Dev modu  (local Anvil EVM):
+#    1. .env dosyasında: RPC_URL=http://anvil:8545
+#    2. docker compose --profile dev up --build
 #
-#  Prod mode (Monad Testnet — override RPC_URL + CONTRACT_ADDRESS in .env):
+#  Prod modu (Monad Testnet):
+#    1. .env dosyasında: RPC_URL=https://testnet-rpc.monad.xyz
+#    2. docker compose up --build
+#    VEYA overlay ile:
 #    docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 #
-#  Health-check only:
-#    docker compose up backend          # starts backend alone (no chain listener)
-#
-# ─── Required .env variables (see .env.example) ────────────────────────────────
-#   RPC_URL            Monad HTTP RPC  (dev default: http://anvil:8545)
-#   CONTRACT_ADDRESS   Deployed EnergyMarket (dev default: Anvil deterministic)
-#   PRIVATE_KEY        Signing key hex  (dev default: Anvil account #0)
-#   INTERNAL_TOKEN     Backend ↔ runner shared secret
-#   BESS_ADDRESS       BESS Ethereum address for SOC attribution
-#
-# ─── Deterministic Anvil addresses (account #0) ────────────────────────────────
-#   Private key  : 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-#   Public addr  : 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-#   Contract addr: 0x5FbDB2315678afecb367f032d93F642f64180aa3  (nonce=0 deploy)
+# ─── Tek .env dosyası ─────────────────────────────────────────────────────────
+#   Tüm servisler proje kökündeki .env'i okur.
+#   Değişkenler: RPC_URL, CONTRACT_ADDRESS, PRIVATE_KEY, BESS_ADDRESS,
+#                INTERNAL_TOKEN, SOC_PUSH_INTERVAL_S, HOST, PORT
+#   Bkz: .env.example
 
 networks:
   parallelpulse-net:
@@ -49,12 +44,7 @@ services:
     ports:
       - "8545:8545"
     healthcheck:
-      test:
-        - "CMD"
-        - "cast"
-        - "block-number"
-        - "--rpc-url"
-        - "http://localhost:8545"
+      test: ["CMD", "cast", "block-number", "--rpc-url", "http://localhost:8545"]
       interval: 5s
       timeout: 4s
       retries: 12
@@ -65,16 +55,17 @@ services:
 
   # ═══════════════════════════════════════════════════════════════════════════
   # DEV ONLY ─ One-shot contract deployer
-  #
-  # Deploys EnergyMarket.sol to Anvil.
-  # Deterministic result: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+  #   RPC_URL hardcode: deployer DAIMA Anvil'e bağlanır (http://anvil:8545).
+  #   PRIVATE_KEY root .env'den okunur.
   # ═══════════════════════════════════════════════════════════════════════════
   deployer:
     build:
       context: contracts
       dockerfile: Dockerfile.deployer
+    env_file:
+      - .env
     environment:
-      - PRIVATE_KEY=${PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
+      # Deployer her zaman yerel Anvil'e deploy eder (testnet .env değerini override eder)
       - RPC_URL=http://anvil:8545
     depends_on:
       anvil:
@@ -86,12 +77,7 @@ services:
 
   # ═══════════════════════════════════════════════════════════════════════════
   # Backend ─ FastAPI WebSocket relay
-  #
-  # Exposes:
-  #   WS  /ws                  — Flutter WebSocket feed
-  #   GET /bess/{addr}/state   — On-chain BESS state query
-  #   POST /internal/soc       — SOC push from Python runner
-  #   GET /health              — Liveness probe
+  #   Tüm değişkenler root .env'den gelir.
   # ═══════════════════════════════════════════════════════════════════════════
   backend:
     build:
@@ -99,20 +85,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - RPC_URL=${RPC_URL:-http://anvil:8545}
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS:-0x5FbDB2315678afecb367f032d93F642f64180aa3}
-      - INTERNAL_TOKEN=${INTERNAL_TOKEN:-parallelpulse-internal-secret}
+    env_file:
+      - .env
     depends_on:
       deployer:
         condition: service_completed_successfully
-        required: false   # ignored when deployer profile is inactive (prod)
+        required: false   # dev profile aktif değilse yok sayılır
     healthcheck:
-      test:
-        - "CMD"
-        - "curl"
-        - "-f"
-        - "http://localhost:8000/health"
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -122,23 +102,18 @@ services:
     restart: unless-stopped
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # Energy ─ Python simulation runner
-  #
-  # Runs in SOC-demo-only mode inside Docker (gsy-e not installed).
-  # Emits fault signals → Monad, pushes SOC readings → backend /internal/soc.
+  # Energy ─ Python simulation runner (demo mode)
+  #   BACKEND_URL: Docker içi servis adı — .env'deki localhost değerini override eder.
   # ═══════════════════════════════════════════════════════════════════════════
   energy:
     build:
       context: energy
       dockerfile: Dockerfile.parallelpulse
+    env_file:
+      - .env
     environment:
-      - MONAD_RPC_URL=${RPC_URL:-http://anvil:8545}
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS:-0x5FbDB2315678afecb367f032d93F642f64180aa3}
-      - PRIVATE_KEY=${PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
+      # Docker servis adı routing — .env'deki http://localhost:8000 değerini override eder
       - BACKEND_URL=http://backend:8000
-      - INTERNAL_TOKEN=${INTERNAL_TOKEN:-parallelpulse-internal-secret}
-      - BESS_ADDRESS=${BESS_ADDRESS:-0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266}
-      - SOC_PUSH_INTERVAL_S=${SOC_PUSH_INTERVAL_S:-15}
     depends_on:
       backend:
         condition: service_healthy

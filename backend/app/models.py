@@ -26,6 +26,21 @@ class EventMessage(BaseModel):
     # str(bus_id) → soc_percent mapping for all known BESS units.
     bess_soc_map: Optional[dict[str, float]] = None
 
+    # --- Sprint 3: Community aggregation fields (CommunityUpdate) ---------
+    # Total energy contributed across all BESS in this session (Wh).
+    community_total_energy_wh: Optional[int] = None
+    # Number of distinct BESS addresses that have contributed this session.
+    community_active_bess_count: Optional[int] = None
+    # Total number of settled transfers.
+    community_settlement_count: Optional[int] = None
+    # True when grid is in emergency mode.
+    community_is_emergency: Optional[bool] = None
+    # Top BESS providers sorted by earnings: [{address, earnings_wei,
+    # total_energy_wh, rank}]
+    community_leaderboard: Optional[list[dict]] = None
+    # 5 most recent settled transfers.
+    community_recent_transfers: Optional[list[dict]] = None
+
 
 class BESSStateResponse(BaseModel):
     bess_address: str
@@ -39,3 +54,10 @@ class SOCUpdatePayload(BaseModel):
     soc_percent: float
     earnings_wei: int = 0
     timestamp_ms: Optional[int] = None
+
+
+class OfferPayload(BaseModel):
+    """Body for POST /bess/offer — submitted by BESS owners during emergency."""
+    wallet_address: str
+    amount_wh: int
+    price_wei_per_wh: int = 5

@@ -29,8 +29,9 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
-# Load .env from the energy/ directory
-_ENV_PATH = Path(__file__).parent.parent / ".env"
+# Load .env from the project root (Monadic-Flow/.env) — single source of truth.
+# energy/parallel_pulse/runner.py → energy/parallel_pulse/ → energy/ → root/
+_ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(_ENV_PATH)
 
 logging.basicConfig(
@@ -144,11 +145,11 @@ def run_simulation_standalone(stop_event: threading.Event) -> None:
 def main() -> int:
     """Entrypoint: start simulation + fault detection + SOC push loop."""
     # Validate required environment variables
-    missing = [v for v in ("MONAD_RPC_URL", "CONTRACT_ADDRESS", "PRIVATE_KEY") if not os.environ.get(v)]
+    missing = [v for v in ("RPC_URL", "CONTRACT_ADDRESS", "PRIVATE_KEY") if not os.environ.get(v)]
     if missing:
         logger.error(
             "Missing required environment variables: %s\n"
-            "Copy energy/.env.example to energy/.env and fill in the values.",
+            "Copy .env.example to .env in the project root and fill in the values.",
             ", ".join(missing),
         )
         return 1

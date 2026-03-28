@@ -9,6 +9,8 @@
 /// - "SOCUpdate"         — BESS state-of-charge tick from the simulation.
 /// - "GridStatusUpdate"  — (Sprint 2) topology overlay: failed lines, feeding
 ///                         BESS buses, and per-bus SOC map.
+/// - "CommunityUpdate"   — (Sprint 3) community aggregates: total energy,
+///                         active BESS count, leaderboard, recent transfers.
 class EventMessage {
   const EventMessage({
     required this.eventType,
@@ -27,6 +29,13 @@ class EventMessage {
     this.feedingBessBuses,
     this.feedingFlows,
     this.bessSOCMap,
+    // Sprint 3 community aggregation fields
+    this.communityTotalEnergyWh,
+    this.communityActiveBessCount,
+    this.communitySettlementCount,
+    this.communityIsEmergency,
+    this.communityLeaderboard,
+    this.communityRecentTransfers,
   });
 
   /// Discriminator — one of: "EmergencyActivated", "TransferSettled",
@@ -70,6 +79,29 @@ class EventMessage {
   /// Maps str(bus_id) → soc_percent for every known BESS unit.
   /// Example: {"12": 67.4, "22": 45.2}
   final Map<String, double>? bessSOCMap;
+
+  // -------------------------------------------------------------------------
+  // Sprint 3: CommunityUpdate fields
+  // -------------------------------------------------------------------------
+
+  /// Total energy contributed by all BESS units this session (Wh).
+  final int? communityTotalEnergyWh;
+
+  /// Number of distinct BESS addresses that have contributed this session.
+  final int? communityActiveBessCount;
+
+  /// Total number of settled transfers.
+  final int? communitySettlementCount;
+
+  /// True when the grid is in emergency mode.
+  final bool? communityIsEmergency;
+
+  /// Leaderboard entries: [{address, earnings_wei, total_energy_wh, rank}]
+  final List<Map<String, dynamic>>? communityLeaderboard;
+
+  /// 5 most recent settled transfers:
+  /// [{bess_address, load_address, amount_wh, earnings_wei, timestamp_ms}]
+  final List<Map<String, dynamic>>? communityRecentTransfers;
 
   // -------------------------------------------------------------------------
   // Factory
@@ -118,6 +150,13 @@ class EventMessage {
           (json['feeding_bess_buses'] as List?)?.map((e) => e as int).toList(),
       feedingFlows: parseMapList(json['feeding_flows']),
       bessSOCMap: parseStringDoubleMap(json['bess_soc_map']),
+      // Sprint 3 community fields
+      communityTotalEnergyWh: json['community_total_energy_wh'] as int?,
+      communityActiveBessCount: json['community_active_bess_count'] as int?,
+      communitySettlementCount: json['community_settlement_count'] as int?,
+      communityIsEmergency: json['community_is_emergency'] as bool?,
+      communityLeaderboard: parseMapList(json['community_leaderboard']),
+      communityRecentTransfers: parseMapList(json['community_recent_transfers']),
     );
   }
 

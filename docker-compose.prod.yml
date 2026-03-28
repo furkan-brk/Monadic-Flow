@@ -1,32 +1,18 @@
-# docker-compose.prod.yml — Monad Testnet override
+# docker-compose.prod.yml — Monad Testnet overlay
 #
-# Merges with docker-compose.yml to point all services at Monad Testnet.
-# anvil + deployer are NOT started (no --profile dev).
-#
-# Usage:
+# Kullanım:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 #
-# Required .env values (copy .env.example → .env and fill in):
-#   RPC_URL           = https://testnet-rpc.monad.xyz
-#   CONTRACT_ADDRESS  = 0x<deployed address from forge script --broadcast>
-#   PRIVATE_KEY       = 0x<real signing key — NEVER commit>
-#   BESS_ADDRESS      = 0x<your BESS device address>
-#   INTERNAL_TOKEN    = <strong random secret>
+# Gereksinim: .env dosyasında gerçek Monad Testnet değerleri olmalı:
+#   RPC_URL=https://testnet-rpc.monad.xyz
+#   CONTRACT_ADDRESS=0x<forge script --broadcast çıktısından>
+#   PRIVATE_KEY=0x<gerçek imzalama anahtarı — ASLA commit etme>
+#   BESS_ADDRESS=0x<gerçek BESS adresi>
+#   INTERNAL_TOKEN=<güçlü rastgele değer>
 
 services:
   backend:
-    environment:
-      - RPC_URL=https://testnet-rpc.monad.xyz
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS:?CONTRACT_ADDRESS must be set for prod}
-      - INTERNAL_TOKEN=${INTERNAL_TOKEN:?INTERNAL_TOKEN must be set for prod}
     restart: always
 
   energy:
-    environment:
-      - MONAD_RPC_URL=https://testnet-rpc.monad.xyz
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS:?CONTRACT_ADDRESS must be set for prod}
-      - PRIVATE_KEY=${PRIVATE_KEY:?PRIVATE_KEY must be set for prod}
-      - BESS_ADDRESS=${BESS_ADDRESS:?BESS_ADDRESS must be set for prod}
-      - INTERNAL_TOKEN=${INTERNAL_TOKEN:?INTERNAL_TOKEN must be set for prod}
-      - BACKEND_URL=http://backend:8000
     restart: always
