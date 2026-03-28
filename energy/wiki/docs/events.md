@@ -1,0 +1,1 @@
+This feature is currently only available for simulations using the backend code and it will soon be available in the new interface, when this documentation will be updated. For backend modelling instructions please see [this section](backend_events.md).

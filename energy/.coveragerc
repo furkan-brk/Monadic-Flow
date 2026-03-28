@@ -1,0 +1,19 @@
+[run]
+branch = True
+source = gsy_e
+parallel = True
+
+omit =
+    */setup/*
+
+[paths]
+source =
+    src/gsy_e
+    */site-packages/gsy_e
+    */site-packages/*.egg/gsy_e
+    */dist-packages/gsy_e
+    */dist-packages/*.egg/gsy_e
+
+[report]
+show_missing = true
+fail_under = 35

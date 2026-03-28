@@ -1,0 +1,204 @@
+site_name: 'Grid Singularity Wiki'
+site_description: 'Documentation for the Grid Singularity Exchange'
+site_author: 'Grid Singularity'
+site_url: 'https://gridsingularity.github.io/gsy-e/documentation/'
+
+nav:
+- 'General Overview':
+    - 'Grid Singularity Mission': 'documentation.md'
+    - 'Grid Singularity Technical Approach': 'technical-approach.md'
+    - 'Grid Singularity Development Path': 'development-path.md'
+    - 'Licensing and Open Source Ethos': 'licensing.md'
+- 'Set up a simulation of an active local energy market':
+    - 'Instructions for running simulations using the Grid Singularity interface: Singularity Map':
+        - 'Build a community': 'community.md'
+        - 'Assets configuration':
+          - 'Assets Configuration Overview' : 'configuration.md'
+          - 'Home': 'home.md'
+          - 'Solar Panels (PVs)': 'solar-panels.md'
+          - 'Consumption (Load) Profiles': 'consumption.md'
+          - 'Battery (Storage)': 'battery.md'
+          - 'Power Plant': 'power-plant.md'
+          - 'Heat Pumps and District Heating':
+            - 'Heat Pump & Virtual Heat Pump Overview': 'heat-pumps-general.md'
+            - 'Heat Pump': 'heat-pump.md'
+            - 'Virtual Heat Pump': 'virtual-heat-pump.md'
+        - 'Community Settings': 'community-settings.md'
+        - 'Grid Market Settings': 'grid-market-settings.md'
+        - 'Events (Adding, Removing Assets, etc.)': 'events.md'
+    - 'Instructions for running simulations using the Grid Singularity backend code':
+        - 'Backend Installation Instructions':
+            - 'Linux Installation Instructions': 'linux-installation-instructions.md'
+            - 'Mac Installation Instructions': 'ios-installation-instructions.md'
+            - 'Windows Installation Instructions': 'vm-installation-instructions.md'
+            - 'Version Updates': 'version-update.md'
+        - 'Backend Simulation Configuration':
+            - 'Setup Configuration': 'setup-configuration.md'
+            - 'Setting General Configuration Parameters': 'setting-configuration-parameters.md'
+            - 'Market Backend Configuration': 'market-backend-configuration.md'
+            - 'Assets Installation': 'assets-installation.md'
+            - 'Configuring Events': 'backend_events.md'
+            - 'Launching Simulation': 'launch_simulation.md'
+        - 'Backend Results':
+            - 'Backend Results Overview': 'backend-results-overview.md'
+            - 'Energy bills': 'backend-results-energy-bills.md'
+    - 'Data Requirements and File Upload Format': 'data-requirements.md'
+- 'Results and Analysis':
+    - 'Results dashboard': 'results-dashboard'
+    - 'Net Energy Traded, Energy Cost (Bill) and Energy Cost Savings': 'bills_savings.md'
+    - 'Self-Sufficiency and Self-Consumption': 'self-sufficiency-self-consumption.md'
+    - 'Carbon Footprint and Carbon Savings': 'carbon-footprint-savings.md'
+    - 'Trade Profile and Energy Peak Percentage': 'trade-profile.md'
+    - 'Aggregate Market Summary': 'aggregate-market-summary.md'
+    - 'Price Graph': 'price.md'
+    - 'Cumulative trades chart and bids and offers graph': 'trades.md'
+    - 'Results Download': 'results-download.md'
+    - 'Duplicating simulations': 'duplicating-simulations'
+- 'Market Mechanisms':
+    - 'Grid Singularity Exchange Trading Agents and Strategies': 'trading-agents-and-strategies.md'
+    - 'Grid Singularity Exchange Market Types': 'market-types.md'
+    - 'Grid Fee Accounting': 'grid-fee-accounting.md'
+- 'Collaborations and APIs':
+    - 'Create a Grid Singularity Collaboration': 'collaboration.md'
+    - 'Connect to the Grid Singularity APIs':
+        - 'Introduction': 'APIs-introduction.md'
+        - 'Create custom trading agents using the Grid Singularity Asset API':
+            - 'Grid Singularity Asset API Overview': 'configure-trading-strategies-walkthrough.md'
+            - 'Asset API Events': 'asset-api-events.md'
+            - 'Asset API Commands': 'asset-api-commands.md'
+            - 'Asset API Template Script': 'asset-api-template-script.md'
+            - 'Launch the Asset API':
+                - 'Registration - Simulations run on the User-Interface': 'registration-asset-api-user-interface.md'
+                - 'Registration - Simulations run on the Backend': 'registration-asset-api-backend.md'
+        - 'Implement dynamic grid fees through the Grid Singularity Grid Operator API':
+            - 'Grid Singularity Grid Operator API Overview': 'implement-grid-fees-walkthrough.md'
+            - 'Grid Operator API Events': 'grid-operator-api-events.md'
+            - 'Grid Operator API Commands': 'grid-operator-api-commands.md'
+            - 'Grid Operator API Template Script': 'grid-operator-api-template-script.md'
+            - 'Launch the Grid Operator API':
+                - 'Registration - Simulations run on the User-Interface': 'registration-grid-operator-api-user-interface.md'
+                - 'Registration - Simulations run on the Backend': 'registration-grid-operator-api-backend.md'
+        - 'Customize the clearing algorithm through the Grid Singularity Matching API':
+            - 'Grid Singularity Matching API Overview': 'matching-api-walkthrough.md'
+            - 'Matching API Events': 'matching-api-events.md'
+            - 'Matching API Commands': 'matching-api-commands.md'
+            - 'Matching API Template Script': 'matching-api-template-script.md'
+            - 'Launch the Matching API':
+                - 'Registration - Simulations run on the User-Interface': 'registration-matching-api-user-interface.md'
+                - 'Registration - Simulations run on the Backend': 'registration-matching-api-backend.md'
+        - 'Extract data (historical profile and grid topology) through the Grid Singularity Historical Data and Grid Data APIs': 'get-simulation-data.md'
+- 'Grid Singularity Canary Test Network':
+    - 'Connect to a Grid Singularity Canary Test Network': 'connect-ctn.md'
+    - 'Send live energy asset data streams to the Grid Singularity exchange':
+        - 'Establish a connection with your energy assets': 'connection-energy-assets.md'
+        - 'Send live data streams via the Exchange SDK': 'send-data-exchange-sdk.md'
+        - 'Send live data streams via the REST API': 'send-data-rest-api.md'
+- 'Blockchain Integration':
+  - 'GSY DEX Overview': 'blockchain.md'
+  - 'GSY DEX System Components Overview': 'blockchain-system-components-overview.md'
+  - 'GSY DEX Node Installation, Operation and Development': 'gsy-node.md'
+  - 'GSY DEX Off-Chain Storage': 'blockchain-off-chain-storage.md'
+  - 'GSY DEX Matching Engine': 'blockchain-matching-engine.md'
+  - 'GSY DEX Execution Engine': 'blockchain-execution-engine.md'
+- 'References': 'references.md'
+- 'Releases Archive': 'releases.md'
+## - 'Not included':
+    ## - 'API agent on cloud': 'cloud-service-guide.md'
+    ## - 'Canary Test Network': 'canary-network.md'
+    ## - 'Configuration general settings and installation':
+        ## - 'General Configuration Settings': 'general-settings.md'
+        ## - 'Modelling':
+            ## - 'Setting up a simulation in the User Interface': 'ui-initialisation.md'
+            ## - 'Market Settings': 'model-markets.md'
+            ## - 'Energy Assets Configuration':
+                ## - 'Market Maker and Infinite Bus': 'model-market-maker.md'
+                ## - 'Storage': 'model-storage.md'
+                ## - 'Power Plant': 'model-power-plant.md'
+            ## - 'Map': 'map.md'
+            ## - 'File Upload Format': 'upload-file-formats.md'
+            ## - 'Asset and Data Library': 'library.md'
+    ## - 'Results and Analysis':
+        ## - 'Results Dashboard': 'results.md'
+        ## - 'Key Performance Indicators (KPIs)':
+            ## - 'Self-Sufficiency and Self-Consumption': 'self-sufficiency-consumption.md'
+            ## - 'Peak Percentage': 'peak-percentage.md'
+            ## - 'Energy Bill': 'energy-bills.md'
+
+
+
+# Configuration for the Material theme
+theme:
+  name: null
+  custom_dir: 'mkdocs-material/material'
+  language: 'en'
+  palette:
+    primary: 'white'
+    accent: 'teal'
+  font:
+    text: 'PT Sans'
+    code: 'Ubuntu Mono'
+  favicon: 'img/Profile.png'
+  logo: 'img/Profile.png'
+  feature:
+    tabs: false
+
+
+# Extra css for further customization
+extra_css:
+  - 'stylesheets/extra.css'
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - https://research.web3.foundation/en/latest/mathjax-config.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Repository that houses the source code for this site. This
+# is needed to render the nice GH link on the top right.
+repo_name: 'Grid Singularity Exchange'
+repo_url: 'https://github.com/gridsingularity/gsy-e/wiki'
+
+# Social links
+extra:
+  social:
+    - type: 'github'
+      size: 'lg'
+      link: 'https://github.com/gridsingularity'
+    - type: 'twitter'
+      size: 'lg'
+      link: 'https://twitter.com/gridsingularity'
+    - type: 'linkedin'
+      size: 'lg'
+      link: 'https://www.linkedin.com/company/grid-singularity'
+    - type: 'slack'
+      size: 'lg'
+      link: 'https://join.slack.com/t/gsycommunity/shared_invite/zt-dpfxe2gk-hKFccsrr68g982odCJlrIg'
+footer:
+  logo: 'img/New_Logo2.0.png'
+
+markdown_extensions:
+    - admonition
+    - codehilite:
+        guess_lang: false
+    - toc:
+        permalink: true
+        toc_depth: 4
+    - mdtooltips
+    - attr_list
+    - md_in_html
+    - pymdownx.arithmatex:
+        generic: true
+
+plugins:
+    - search:
+        lang: en
+    - exclude-search:
+        exclude:
+          - canary-network.md
+    - redirects:
+        redirect_maps:
+            # When trying to reach the root page, redirect to the documentation page
+            '': 'https://gridsingularity.github.io/gsy-e/documentation/'
+            'blockchain-installation.md': 'gsy-node.md'
+            'two-sided-pay-as-bid.md': 'https://gridsingularity.github.io/gsy-e/market-types/#two-sided-pay-as-bid-market'
