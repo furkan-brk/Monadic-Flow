@@ -62,7 +62,7 @@ class FeedingFlow {
 /// Mutable state of a single bus node; updated by [GridTopologyNotifier].
 class BusNodeState {
   final int busId;
-  final BusType type;
+  BusType type;
   BusStatus status;
 
   /// State-of-charge percentage (0–100). Non-null only for [BusType.bess] nodes.
@@ -173,6 +173,26 @@ class GridTopologyNotifier extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// Convert a node to a BESS node.
+  void addBess(int busId) {
+    final node = busNodes[busId];
+    if (node != null && node.type != BusType.bess) {
+      node.type = BusType.bess;
+      node.socPercent = 80.0;
+      notifyListeners();
+    }
+  }
+
+  /// Remove a BESS from a node, reverting it to normal.
+  void removeBess(int busId) {
+    final node = busNodes[busId];
+    if (node != null && node.type == BusType.bess) {
+      node.type = BusType.normal;
+      node.socPercent = null;
+      notifyListeners();
+    }
   }
 
   @override

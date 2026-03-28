@@ -39,9 +39,23 @@ class MyWalletCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.indigo.withAlpha(60), width: 1),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1A1A2E),
+            const Color(0xFF111122),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.indigo.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.indigo.withAlpha(30), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,29 +63,37 @@ class MyWalletCard extends StatelessWidget {
           // Header row
           Row(
             children: [
-              const Icon(Icons.account_circle_outlined,
-                  color: Colors.indigo, size: 18),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.account_balance_wallet_outlined,
+                    color: Colors.indigoAccent, size: 20),
+              ),
+              const SizedBox(width: 12),
               Text(
                 'Benim Cüzdanım',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.white70,
+                      color: Colors.white.withOpacity(0.9),
                       fontWeight: FontWeight.w700,
+                      fontSize: 15,
                     ),
               ),
               if (walletState.isDemo) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.orange.withAlpha(40),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(
                     'DEMO',
                     style: TextStyle(
                       color: Colors.orange,
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
                     ),
@@ -81,7 +103,7 @@ class MyWalletCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // Address row with copy button
           GestureDetector(
@@ -89,33 +111,45 @@ class MyWalletCard extends StatelessWidget {
               if (walletState.address != null) {
                 Clipboard.setData(ClipboardData(text: walletState.address!));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Adres panoya kopyalandı'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: const Text('Adres panoya kopyalandı', style: TextStyle(color: Colors.white)),
+                    backgroundColor: Colors.indigo.shade800,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               }
             },
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    walletState.address ?? '—',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'monospace',
-                      fontSize: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(40),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      walletState.address ?? '—',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.copy_outlined, color: Colors.white38, size: 14),
-              ],
+                  const SizedBox(width: 12),
+                  Icon(Icons.copy_outlined, color: Colors.indigoAccent.withAlpha(200), size: 18),
+                ],
+              ),
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Stats row
           Row(
@@ -133,7 +167,7 @@ class MyWalletCard extends StatelessWidget {
                     ? _formatEnergy(myEntry.totalEnergyWh)
                     : '— Wh',
                 icon: Icons.bolt,
-                color: Colors.amber,
+                color: Colors.amberAccent,
               ),
               const SizedBox(width: 12),
               _MiniStat(
@@ -147,28 +181,41 @@ class MyWalletCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Submit offer CTA
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: bessState.emergencyMode ? onSubmitOffer : null,
-              icon: const Icon(Icons.offline_bolt, size: 18),
+              icon: Icon(
+                bessState.emergencyMode ? Icons.offline_bolt : Icons.hourglass_empty, 
+                size: 20,
+              ),
               label: Text(
                 bessState.emergencyMode
                     ? 'Enerji Teklifi Ver 5×'
                     : 'Acil Mod Bekleniyor…',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                ),
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: bessState.emergencyMode
-                    ? Colors.orange
-                    : Colors.grey.shade800,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(44),
+                    ? Colors.orange.shade600
+                    : Colors.white.withAlpha(15),
+                foregroundColor: bessState.emergencyMode 
+                    ? Colors.white
+                    : Colors.white54,
+                disabledBackgroundColor: Colors.white.withAlpha(10),
+                disabledForegroundColor: Colors.white38,
+                minimumSize: const Size.fromHeight(54),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                elevation: bessState.emergencyMode ? 4 : 0,
               ),
             ),
           ),

@@ -25,51 +25,86 @@ class SavingsKpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0A2A1A),
-            const Color(0xFF0D1F0D),
+            const Color(0xFF13221A),
+            const Color(0xFF0D1410),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withAlpha(60), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.greenAccent.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.greenAccent.withAlpha(30), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Card header ────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
             child: Row(
               children: [
-                Icon(
-                  Icons.savings_outlined,
-                  color: Colors.greenAccent.shade200,
-                  size: 18,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.greenAccent.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.savings_outlined,
+                    color: Colors.greenAccent.shade400,
+                    size: 20,
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Text(
-                  'Tasarruf KPI · Singularity',
+                  'Tasarruf KPI',
                   style: TextStyle(
-                    color: Colors.greenAccent.shade200,
+                    color: Colors.white.withOpacity(0.9),
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: 15,
                     letterSpacing: 0.5,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(80),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: Colors.greenAccent.shade200, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Singularity',
+                        style: TextStyle(
+                          color: Colors.greenAccent.shade100,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 14),
-
           // ── 2x2 metric grid ────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
             child: Row(
               children: [
                 Expanded(
@@ -81,17 +116,17 @@ class SavingsKpiCard extends StatelessWidget {
                         label: 'Şebeke Tasarrufu',
                         value: '€${_billSavedEur.toStringAsFixed(2)}',
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       _MetricTile(
                         icon: Icons.eco_outlined,
-                        color: Colors.lightGreen,
+                        color: Colors.lightGreenAccent,
                         label: 'CO₂ Tasarrufu',
                         value: '${_co2SavedKg.toStringAsFixed(2)} kg',
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     children: [
@@ -101,7 +136,7 @@ class SavingsKpiCard extends StatelessWidget {
                         label: 'Öz-Yeterlilik',
                         value: '%${_selfSufficiency.toStringAsFixed(1)}',
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       _MetricTile(
                         icon: Icons.token_outlined,
                         color: Colors.amberAccent,
@@ -140,15 +175,22 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.black.withAlpha(60),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white12),
+        color: Colors.black.withAlpha(40),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withAlpha(30)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withAlpha(15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -157,18 +199,20 @@ class _MetricTile extends StatelessWidget {
                 Text(
                   value,
                   style: TextStyle(
-                    color: color,
-                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.95),
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 9,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                     letterSpacing: 0.2,
                   ),
                   maxLines: 1,
@@ -182,3 +226,4 @@ class _MetricTile extends StatelessWidget {
     );
   }
 }
+

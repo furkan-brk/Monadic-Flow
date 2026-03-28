@@ -9,18 +9,23 @@ class GridLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey.shade900,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16162C).withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.indigo.withAlpha(30), width: 1),
+      ),
       child: Wrap(
-        alignment: WrapAlignment.spaceEvenly,
-        spacing: 12,
-        runSpacing: 4,
+        alignment: WrapAlignment.center,
+        spacing: 16,
+        runSpacing: 10,
         children: const [
-          _LegendDot(color: Color(0xFFFF8C00), label: '1st Critical'),
-          _LegendDot(color: Color(0xFFFF69B4), label: '2nd Critical'),
+          _LegendDot(color: Color(0xFFFF8C00), label: '1. Kritik'),
+          _LegendDot(color: Color(0xFFFF69B4), label: '2. Kritik'),
           _LegendDot(color: Color(0xFF66BB6A), label: 'BESS'),
           _LegendDot(color: Colors.cyan, label: 'Normal'),
-          _LegendDot(color: Color(0xFF1565C0), label: 'Substation'),
+          _LegendDot(color: Color(0xFF1565C0), label: 'Trafo'),
           _LegendX(),
         ],
       ),
@@ -40,14 +45,28 @@ class _LegendDot extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 11,
-          height: 11,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.4),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 10),
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -63,20 +82,25 @@ class _LegendX extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 11,
-          height: 11,
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
             shape: BoxShape.circle,
+            border: Border.all(color: Colors.redAccent.withAlpha(80)),
           ),
           child: const Center(
-            child: Icon(Icons.close, color: Colors.red, size: 9),
+            child: Icon(Icons.close, color: Colors.redAccent, size: 10),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         const Text(
-          'Line Fail',
-          style: TextStyle(color: Colors.white70, fontSize: 10),
+          'Hat Arızası',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
