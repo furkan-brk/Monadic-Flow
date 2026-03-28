@@ -695,6 +695,40 @@ class _BusDetailSheet extends StatelessWidget {
             ],
           ),
 
+          if (node.type != BusType.substation && node.type != BusType.criticalL1 && node.type != BusType.criticalL2)
+            ...[
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (node.type == BusType.bess) {
+                      topo.removeBess(node.busId);
+                    } else {
+                      topo.addBess(node.busId);
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  icon: Icon(
+                    node.type == BusType.bess ? Icons.remove_circle_outline : Icons.add_circle_outline,
+                    color: node.type == BusType.bess ? Colors.redAccent : Colors.greenAccent,
+                  ),
+                  label: Text(
+                    node.type == BusType.bess ? 'BESS Kaldır' : 'BESS Ekle',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: node.type == BusType.bess ? Colors.red.withAlpha(40) : Colors.green.withAlpha(40),
+                    foregroundColor: node.type == BusType.bess ? Colors.redAccent : Colors.greenAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
           // Feeding flows involving this bus
           ..._buildFeedingInfo(context),
         ],

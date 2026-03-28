@@ -45,12 +45,26 @@ class TradeProfileChart extends StatelessWidget {
     final volumes = _buildVolumes();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D0D2A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.indigo.withAlpha(60), width: 1),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF14142B),
+            const Color(0xFF0D0D1A),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.indigo.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.indigo.withAlpha(30), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,14 +72,21 @@ class TradeProfileChart extends StatelessWidget {
           // ── Header ───────────────────────────────────────────────────────
           Row(
             children: [
-              const Icon(Icons.timeline, color: Colors.indigo, size: 18),
-              const SizedBox(width: 8),
-              const Text(
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.timeline, color: Colors.indigoAccent, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
                 'İşlem Profili',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: Colors.white.withOpacity(0.9),
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 15,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -73,7 +94,7 @@ class TradeProfileChart extends StatelessWidget {
               if (snapshot.isEmergency)
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.red.withAlpha(40),
                     borderRadius: BorderRadius.circular(6),
@@ -82,7 +103,7 @@ class TradeProfileChart extends StatelessWidget {
                   child: const Text(
                     'FİYAT ARTIŞI',
                     style: TextStyle(
-                      color: Colors.red,
+                      color: Colors.redAccent,
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                     ),
@@ -96,11 +117,11 @@ class TradeProfileChart extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // ── Canvas chart ─────────────────────────────────────────────────
           SizedBox(
-            height: 160,
+            height: 140,
             child: CustomPaint(
               painter: _TradeProfilePainter(
                 prices: prices,
@@ -111,7 +132,7 @@ class TradeProfileChart extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
 
           // ── X-axis labels ─────────────────────────────────────────────────
           Row(
@@ -122,9 +143,9 @@ class TradeProfileChart extends StatelessWidget {
                 'T-${9 - i}',
                 style: TextStyle(
                   color: (i == 9 && snapshot.isEmergency)
-                      ? Colors.red
-                      : Colors.white24,
-                  fontSize: 9,
+                      ? Colors.redAccent
+                      : Colors.white38,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
               ),
