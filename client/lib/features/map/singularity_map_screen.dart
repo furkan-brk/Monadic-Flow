@@ -4,7 +4,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/grid_state.dart';
+import 'logic/simulation_models.dart';
+import 'logic/simulation_notifier.dart';
 import 'models/bus_geo_data.dart';
+import 'widgets/sim_control_panel.dart';
 
 /// Interactive geo-map of the IEEE 33-bus network — the 4th tab "Harita".
 ///
@@ -109,6 +112,30 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
                   MarkerLayer(
                     markers: _buildMarkers(context, topo),
                   ),
+
+                  // ── Simulation contract flow lines ───────────────────────
+                  // Uses AnimatedBuilder referencing the parent state's
+                  // _flowAnim and reads sim from Provider inside the builder.
+                  AnimatedBuilder(
+                    animation: _flowAnim,
+                    builder: (ctx, __) {
+                      final sim = ctx.read<SimulationNotifier>();
+                      return PolylineLayer(
+                        polylines: _buildSimFlowPolylines(sim, _flowAnim.value),
+                      );
+                    },
+                  ),
+
+                  // ── Simulation node markers ──────────────────────────────
+                  AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (ctx, __) {
+                      final sim = ctx.read<SimulationNotifier>();
+                      return MarkerLayer(
+                        markers: _buildSimMarkers(context, sim),
+                      );
+                    },
+                  ),
                 ],
               ),
 
@@ -127,6 +154,9 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
                 right: 0,
                 child: _EmergencyPanel(topo: topo),
               ),
+
+              // ── Simulation control panel ───────────────────────────────────
+              const SimControlPanel(),
             ],
           ),
         );
@@ -232,6 +262,90 @@ class _SingularityMapScreenState extends State<SingularityMapScreen>
     }
 
     return polylines;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Simulation contract flow polylines
+  // ---------------------------------------------------------------------------
+
+  List<Polyline> _buildSimFlowPolylines(
+    SimulationNotifier sim,
+    double animValue,
+  ) {
+    final polylines = <Polyline>[];
+    if (!sim.isRunning && sim.activeContracts.isEmpty) return polylines;
+
+    for (final contract in sim.activeContracts) {
+      if (contract.status == ContractStatus.rejected) {
+        // Red dashed line for rejected contracts
+        final from = sim.nodeById(contract.fromNodeId).position;
+        final to = sim.nodeById(contract.toNodeId).position;
+        final mid = LatLng(
+          (from.latitude + to.latitude) / 2,
+          (from.longitude + to.longitude) / 2,
+        );
+        polylines.add(Polyline(
+          points: [from, mid],
+          color: Colors.red.withAlpha(140),
+          strokeWidth: 2.5,
+        ));
+        polylines.add(Polyline(
+          points: [mid, to],
+          color: Colors.red.withAlpha(50),
+          strokeWidth: 2.5,
+        ));
+        continue;
+      }
+
+      final from = sim.nodeById(contract.fromNodeId).position;
+      final to = sim.nodeById(contract.toNodeId).position;
+
+      // Outer glow
+      polylines.add(Polyline(
+        points: [from, to],
+        color: Colors.greenAccent.withAlpha((animValue * 200).toInt()),
+        strokeWidth: 3.0 + animValue * 3.0,
+      ));
+      // White core
+      polylines.add(Polyline(
+        points: [from, to],
+        color: Colors.white.withAlpha((animValue * 90).toInt()),
+        strokeWidth: 1.2,
+      ));
+    }
+    return polylines;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Simulation node markers
+  // ---------------------------------------------------------------------------
+
+  List<Marker> _buildSimMarkers(
+    BuildContext context,
+    SimulationNotifier sim,
+  ) {
+    return sim.simNodes.map((node) {
+      return Marker(
+        point: node.position,
+        width: 72,
+        height: 72,
+        child: GestureDetector(
+          onTap: () => _showSimNodeDetail(context, node, sim),
+          child: _SimNodeMarker(node: node, sim: sim, pulseValue: _pulseAnim.value),
+        ),
+      );
+    }).toList();
+  }
+
+  void _showSimNodeDetail(BuildContext context, SimNode node, SimulationNotifier sim) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SimNodeDetailSheet(node: node, sim: sim),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -888,6 +1002,322 @@ class _DetailChip extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Simulation node marker
+// ===========================================================================
+
+class _SimNodeMarker extends StatelessWidget {
+  const _SimNodeMarker({
+    required this.node,
+    required this.sim,
+    required this.pulseValue,
+  });
+
+  final SimNode node;
+  final SimulationNotifier sim;
+  final double pulseValue;
+
+  Color get _baseColor {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return node.id == 'sim_p1' ? Colors.amber : Colors.cyan;
+      case SimNodeType.house:
+        return Colors.deepPurple;
+      case SimNodeType.battery:
+        return Colors.tealAccent;
+    }
+  }
+
+  IconData get _icon {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return node.id == 'sim_p1' ? Icons.wb_sunny : Icons.air;
+      case SimNodeType.house:
+        return Icons.home;
+      case SimNodeType.battery:
+        return Icons.battery_charging_full;
+    }
+  }
+
+  bool get _isActive {
+    return sim.activeContracts.any(
+      (c) =>
+          (c.fromNodeId == node.id || c.toNodeId == node.id) &&
+          c.status == ContractStatus.active,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final glowIntensity = _isActive ? pulseValue : 0.5;
+    final color = _baseColor;
+
+    return Stack(
+      alignment: Alignment.topRight,
+      children: [
+        // Main circle
+        Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            color: color.withAlpha((_isActive ? 230 : 180).toInt()),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withAlpha(80), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withAlpha((glowIntensity * 180).toInt()),
+                blurRadius: 14,
+                spreadRadius: _isActive ? 4 : 2,
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(_icon, color: Colors.white, size: 24),
+          ),
+        ),
+
+        // Label tag
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            _shortLabel,
+            style: TextStyle(
+              color: color,
+              fontSize: 7,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+
+        // Battery SOC bar
+        if (node.type == SimNodeType.battery)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _BatterySocBar(soc: sim.animatedSoc),
+          ),
+      ],
+    );
+  }
+
+  String get _shortLabel {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return node.id == 'sim_p1' ? '☀️ P1' : '💨 P2';
+      case SimNodeType.house:
+        return '🏠 Ev';
+      case SimNodeType.battery:
+        return '🔋 ${sim.animatedSoc.toInt()}%';
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Battery mini bar
+// ---------------------------------------------------------------------------
+
+class _BatterySocBar extends StatelessWidget {
+  const _BatterySocBar({required this.soc});
+  final double soc;
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = (soc / 100).clamp(0.0, 1.0);
+    final color = soc < 30 ? Colors.red : Colors.tealAccent;
+
+    return Container(
+      height: 5,
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: FractionallySizedBox(
+        alignment: Alignment.centerLeft,
+        widthFactor: fraction,
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Simulation node detail bottom sheet
+// ===========================================================================
+
+class _SimNodeDetailSheet extends StatelessWidget {
+  const _SimNodeDetailSheet({required this.node, required this.sim});
+  final SimNode node;
+  final SimulationNotifier sim;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        20,
+        24,
+        MediaQuery.of(context).padding.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Title
+          Row(
+            children: [
+              Icon(_typeIcon, color: _typeColor, size: 28),
+              const SizedBox(width: 12),
+              Text(
+                node.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _typeColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _typeColor.withAlpha(80)),
+                ),
+                child: Text(
+                  _typeLabel,
+                  style: TextStyle(
+                    color: _typeColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white12),
+          const SizedBox(height: 12),
+
+          // Details
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: _chips,
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> get _chips {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return [
+          _Chip('Kapasite', '${node.capacityKwh.toStringAsFixed(0)} kWh', Colors.amber),
+          _Chip('Fiyat', '${node.pricePerKwh.toStringAsFixed(1)} MON/kWh', Colors.orange),
+        ];
+      case SimNodeType.house:
+        return [
+          _Chip('İhtiyaç', '${node.demandKwh.toStringAsFixed(0)} kWh', Colors.deepPurple),
+        ];
+      case SimNodeType.battery:
+        return [
+          _Chip('Maks Kapasite', '${node.maxCapacityKwh.toStringAsFixed(0)} kWh', Colors.tealAccent),
+          _Chip('Mevcut SOC', '${sim.animatedSoc.toStringAsFixed(1)}%', sim.animatedSoc < node.thresholdPercent ? Colors.red : Colors.tealAccent),
+          _Chip('Eşik', '${node.thresholdPercent.toStringAsFixed(0)}%', Colors.orange),
+        ];
+    }
+  }
+
+  IconData get _typeIcon {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return node.id == 'sim_p1' ? Icons.wb_sunny : Icons.air;
+      case SimNodeType.house:
+        return Icons.home;
+      case SimNodeType.battery:
+        return Icons.battery_charging_full;
+    }
+  }
+
+  Color get _typeColor {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return node.id == 'sim_p1' ? Colors.amber : Colors.cyan;
+      case SimNodeType.house:
+        return Colors.deepPurple.shade200;
+      case SimNodeType.battery:
+        return Colors.tealAccent;
+    }
+  }
+
+  String get _typeLabel {
+    switch (node.type) {
+      case SimNodeType.producer:
+        return 'Enerji Üreticisi';
+      case SimNodeType.house:
+        return 'Tüketici';
+      case SimNodeType.battery:
+        return 'Batarya';
+    }
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip(this.label, this.value, this.color);
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withAlpha(60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: const TextStyle(color: Colors.white38, fontSize: 10)),
+          const SizedBox(height: 2),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontSize: 13, fontWeight: FontWeight.w700)),
         ],
       ),
     );

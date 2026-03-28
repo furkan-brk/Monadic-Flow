@@ -11,6 +11,7 @@ import 'features/auth/wallet_connect_screen.dart';
 import 'features/community/community_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/grid/grid_topology_screen.dart';
+import 'features/map/logic/simulation_notifier.dart';
 import 'features/map/singularity_map_screen.dart';
 
 /// Module-level tab index notifier — shared between [AppShell] and
@@ -68,6 +69,11 @@ void main() async {
         // Community-level aggregations — drives Community screen.
         ChangeNotifierProvider<CommunityStateNotifier>.value(
             value: communityNotifier),
+
+        // Smart-contract simulation — drives the sim layer on the Map screen.
+        ChangeNotifierProvider<SimulationNotifier>(
+          create: (_) => SimulationNotifier(),
+        ),
       ],
       child: const ParallelPulseApp(),
     ),
