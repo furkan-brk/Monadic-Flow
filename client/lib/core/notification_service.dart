@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -19,13 +20,11 @@ class NotificationService {
 
   static final NotificationService instance = NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
   ValueNotifier<int>? _tabNotifier;
 
-  bool get _isMobile =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get _isMobile => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   // ---------------------------------------------------------------------------
   // Initialisation
@@ -41,27 +40,19 @@ class NotificationService {
       return;
     }
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: darwinSettings,
-    );
+    const initSettings = InitializationSettings(android: androidSettings, iOS: darwinSettings);
 
-    await _plugin.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTap,
-    );
+    await _plugin.initialize(initSettings, onDidReceiveNotificationResponse: _onNotificationTap);
 
     if (Platform.isAndroid) {
       await _plugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.requestNotificationsPermission();
     }
 
@@ -88,16 +79,10 @@ class NotificationService {
         priority: Priority.high,
         enableVibration: true,
         playSound: true,
-        styleInformation: BigTextStyleInformation(
-          'Hastane ve okullara enerji sağlamak için BESS\'inizi devreye alın.',
-        ),
+        styleInformation: BigTextStyleInformation('Hastane ve okullara enerji sağlamak için BESS\'inizi devreye alın.'),
         color: _kRedArgb,
       ),
-      iOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      ),
+      iOS: DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true),
     );
 
     await _plugin.show(
@@ -112,10 +97,7 @@ class NotificationService {
   }
 
   /// Show an earnings notification when a [TransferSettled] event arrives.
-  Future<void> showEarningsAlert({
-    required int amountWh,
-    required int earningsWei,
-  }) async {
+  Future<void> showEarningsAlert({required int amountWh, required int earningsWei}) async {
     if (!_isMobile) return;
 
     final amountKwh = (amountWh / 1000).toStringAsFixed(1);
@@ -131,11 +113,7 @@ class NotificationService {
         enableVibration: false,
         color: _kGreenArgb,
       ),
-      iOS: DarwinNotificationDetails(
-        presentAlert: false,
-        presentBadge: true,
-        presentSound: false,
-      ),
+      iOS: DarwinNotificationDetails(presentAlert: false, presentBadge: true, presentSound: false),
     );
 
     await _plugin.show(
