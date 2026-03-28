@@ -1,0 +1,68 @@
+{
+  "team": "parallelpulse",
+  "description": "ParallelPulse decentralized energy trading platform team for Monad Blitz Hackathon",
+  "lead": "parallelpulse-lead-architect",
+  "members": [
+    {
+      "agent": "parallelpulse-lead-architect",
+      "role": "lead",
+      "domain": "cross-layer architecture, prioritization, integration coordination",
+      "model": "sonnet",
+      "handles": ["architecture decisions", "cross-layer integration", "hackathon triage", "feature prioritization"]
+    },
+    {
+      "agent": "energy-community-researcher",
+      "role": "member",
+      "domain": "Python / GSy-e simulation engine (energy/)",
+      "color": "green",
+      "model": "sonnet",
+      "handles": ["Area/Market/Asset tree design", "fault detection pipeline", "IEEE 33 Bus modeling", "simulation setup files", "GSy-e strategy configuration"]
+    },
+    {
+      "agent": "flutter-developer",
+      "role": "member",
+      "domain": "Flutter / Dart frontend (client/)",
+      "color": "orange",
+      "model": "sonnet",
+      "handles": ["EmergencyDashboard widget", "StreamBuilder Monad event subscriptions", "BESS SOC visualization", "Push-to-Earn flow", "account abstraction UX"]
+    },
+    {
+      "agent": "go-backend-architect",
+      "role": "member",
+      "domain": "Go backend service (backend/)",
+      "color": "yellow",
+      "model": "sonnet",
+      "handles": ["REST/gRPC API design", "simulation orchestration", "Redis/Kafka integration", "WebSocket relay", "Python-Go bridge"]
+    },
+    {
+      "agent": "monad-energy-contracts",
+      "role": "member",
+      "domain": "Solidity smart contracts (contracts/)",
+      "color": "blue",
+      "model": "sonnet",
+      "handles": ["EnergyMarket.sol", "EmergencyMode logic", "BESS settlement", "ERC-20 energy tokens", "Monad parallel EVM optimization"]
+    }
+  ],
+  "escalation_policy": {
+    "description": "All cross-layer decisions and architectural blockers escalate to the lead",
+    "trigger_conditions": [
+      "cross-layer data schema changes",
+      "MVP scope changes",
+      "security vulnerabilities in contracts",
+      "breaking changes to simulation output format",
+      "hackathon time-boxing decisions"
+    ]
+  },
+  "project": {
+    "name": "ParallelPulse",
+    "hackathon": "Monad Blitz Hackathon",
+    "problem": "Line Fail (Power Outage) in local energy grids",
+    "solution": "Decentralized BESS coordination via Monad Parallel EVM for high-TPS emergency settlement",
+    "layers": {
+      "detection": "energy/ — Python GSy-e IEEE 33 Bus fault detection",
+      "settlement": "contracts/ — Solidity EmergencyMode + instant BESS settlement on Monad",
+      "frontend": "client/ — Flutter real-time BESS dashboard",
+      "backend": "backend/ — Go orchestration layer (reserved)"
+    }
+  }
+}

@@ -13,6 +13,8 @@ Monadic-Flow is a monorepo with the following components:
 
 ## Energy Engine (`energy/`)
 
+**⚠️ Platform Requirement:** Gsy-e only runs on **Linux, macOS, or WSL (Windows Subsystem for Linux)**. It is not compatible with native Windows due to Unix-specific dependencies (e.g., `termios` module). On Windows, use WSL2 or Docker (with proper large-file support) to run simulations.
+
 ### Setup
 
 ```bash
@@ -20,7 +22,7 @@ cd energy
 pip install -e .
 ```
 
-The package depends on `gsy-framework` from GitHub. The `setup.py` pulls the branch specified by `GSY_FRAMEWORK_BRANCH` env var (defaults to `master`).
+The package depends on `gsy-framework` from GitHub. The `setup.py` pulls the branch specified by `GSY_FRAMEWORK_BRANCH` env var (defaults to `master`). Python 3.11+ is required.
 
 ### Running a Simulation
 
@@ -33,13 +35,15 @@ Key flags: `--market-type` (0=none, 1=one-sided, 2=two-sided, 3=coefficient), `-
 
 ### Testing
 
+Tests must run on **Linux/macOS/WSL** (not native Windows). Use Python 3.11.
+
 ```bash
 cd energy
 
-# Full unit test suite
+# Full test suite with tox (sets up Python 3.11 env automatically)
 tox -e setup && tox -e unittests
 
-# Run tests directly (after setup env is active)
+# Run tests directly (after tox setup env is active)
 pytest -n auto ./
 
 # Single test file or test
@@ -51,9 +55,12 @@ pytest --cov-report term --cov=src -n 8
 
 # Lint only
 tox -e lint            # runs flake8
+
+# Integration tests (requires integration-tests submodule)
+tox -e integrationtests
 ```
 
-Line length limit: **99** characters (both `flake8` and `black`). Python version: **3.11**.
+**Code style:** Line length limit: **99** characters (both `flake8` and `black`).
 
 ### Architecture
 
@@ -74,16 +81,39 @@ The simulation is composed of a tree of **`Area`** objects. Each `Area` is eithe
 
 **External connectivity**: Areas can be connected to external agents via Redis (`redis_connections/`, `gsy_e_core/redis_connections/`). The matching engine singleton (`matching_engine_singleton.py`) handles bid/offer matching.
 
+**Distributed events**: The codebase supports Kafka (see `tools/docker-compose.yml`) for distributed event handling across multiple services. This is optional for single-machine simulations. Environment variable `DISPATCH_EVENTS_BOTTOM_TO_TOP` controls event dispatch order.
+
 **Setup files**: Custom simulation scenarios go in `src/gsy_e/setup/` as Python modules that return an `Area` tree. Pass them via `--setup <module_name>`.
+
+### Running on Windows: WSL2
+
+On Windows, use WSL2 (Windows Subsystem for Linux 2) with Ubuntu:
+
+```bash
+# In WSL2 bash:
+cd /mnt/c/Projeler/Monadic-Flow/energy
+python3 -m venv venv
+source venv/bin/activate
+pip install -e .
+gsy-e run --setup default_2a -t 15s -d 1d --no-export
+```
 
 ### Docker
 
+Docker build can be slow or unstable on some systems due to large dependency downloads (e.g., NumPy, SymPy compilation). If you encounter errors:
+
 ```bash
-docker build -t gsy-e .
-docker run --rm -it gsy-e
-# or use the helper script:
+# Try building with increased timeout:
+docker build -t gsy-e . --progress=plain
+
+# Or use the helper script:
 ./run_gsy_e_on_docker.sh "gsy-e run --setup default_2a -t 15s" ~/output
+
+# Run without building:
+docker run --rm -it gsy-e gsy-e run --setup default_2a
 ```
+
+**Note:** Docker build requires sufficient disk space (>5GB) and stable internet connection.
 
 ## Flutter Client (`client/`)
 

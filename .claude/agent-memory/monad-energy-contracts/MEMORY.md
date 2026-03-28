@@ -1,0 +1,1 @@
+- [ParallelPulse contract layer](project_parallelpulse_contracts.md) — initial EnergyMarket.sol + Deploy + tests; design decisions, Monad parallelism rationale, integration points

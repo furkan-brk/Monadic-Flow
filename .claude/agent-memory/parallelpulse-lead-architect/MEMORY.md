@@ -1,0 +1,3 @@
+- [Project Architecture](project_architecture.md) — Full ParallelPulse stack: Python/FastAPI/Solidity/Flutter layers and data flow
+- [Backend Decision](feedback_backend_fastapi.md) — Why FastAPI was chosen over Go/Node for backend
+- [Inter-Layer Schema](project_schema.md) — EventMessage JSON schema crossing all 4 layers

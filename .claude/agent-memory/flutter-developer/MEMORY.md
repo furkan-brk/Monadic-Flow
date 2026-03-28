@@ -1,0 +1,1 @@
+- [ParallelPulse BESS Dashboard](project_parallelpulse.md) — Flutter client for real-time BESS data via WebSocket; uses provider + ChangeNotifier, auto-reconnect WS service
