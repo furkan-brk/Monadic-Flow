@@ -1,0 +1,50 @@
+# energy/.dockerignore — for Dockerfile.parallelpulse
+#
+# Build context is energy/; we only need parallel_pulse/.
+# Exclude the gsy-e source tree to keep the image ~200 MB smaller.
+
+# gsy-e source (not needed in Docker — runner uses demo mode)
+src/
+tests/
+tox.ini
+setup.py
+setup.cfg
+pyproject.toml
+pytest.ini
+requirements/
+wiki/
+vagrant/
+tools/
+.github/
+fabfile.py
+codecov.yml
+run_gsy_e_on_docker.sh
+Dockerfile
+Dockerfile_pypy
+coverage.xml
+.coveragerc
+.pre-commit-config.yaml
+.pylintrc
+
+# Secrets — never bake into image
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Dev tooling
+*.egg-info/
+dist/
+build/
+
+# Misc
+*.md
+.git/
+.gitignore

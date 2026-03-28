@@ -1,0 +1,10 @@
+# Root .gitignore — ParallelPulse monorepo
+
+# Environment files with real credentials
+.env
+.env.local
+.env.*.local
+
+# Docker build artifacts
+**/out/
+**/cache/

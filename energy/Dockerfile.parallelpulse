@@ -1,0 +1,38 @@
+# energy/Dockerfile.parallelpulse — ParallelPulse Python simulation runner
+#
+# Runs the parallel_pulse package ONLY (demo mode — gsy-e not installed).
+# gsy-e requires Linux + full setup; inside Docker we use the SOC sawtooth
+# waveform fallback so the Flutter dashboard receives live data without
+# the full simulation engine.
+#
+# Build context: energy/
+#   docker build -f Dockerfile.parallelpulse -t parallelpulse-energy .
+
+FROM python:3.12-slim
+
+LABEL org.opencontainers.image.title="parallelpulse-energy"
+LABEL org.opencontainers.image.description="ParallelPulse Python simulation runner (demo mode)"
+
+WORKDIR /app
+
+# System packages needed to compile ckzg (web3.py C extension) on Linux.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies
+COPY parallel_pulse/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only the parallel_pulse package
+COPY parallel_pulse/ ./parallel_pulse/
+
+# Ensure /app is on the module search path so `python -m parallel_pulse.runner` works
+ENV PYTHONPATH=/app
+
+# runner.py reads MONAD_RPC_URL, CONTRACT_ADDRESS, PRIVATE_KEY, BACKEND_URL,
+# INTERNAL_TOKEN, BESS_ADDRESS, SOC_PUSH_INTERVAL_S — all set by docker-compose.
+CMD ["python", "-m", "parallel_pulse.runner"]

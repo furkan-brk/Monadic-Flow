@@ -1,0 +1,27 @@
+# backend/.dockerignore
+# Keep the image context minimal — only requirements.txt + app/ are needed.
+
+# Secrets — never bake into image
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Dev tooling
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Docs / misc
+*.md
+.git/
+.gitignore

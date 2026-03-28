@@ -1,3 +1,5 @@
 - [Project Architecture](project_architecture.md) — Full ParallelPulse stack: Python/FastAPI/Solidity/Flutter layers and data flow
 - [Backend Decision](feedback_backend_fastapi.md) — Why FastAPI was chosen over Go/Node for backend
 - [Inter-Layer Schema](project_schema.md) — EventMessage JSON schema crossing all 4 layers
+- [Docker Compose Architecture](project_docker.md) — Compose services, Dockerfiles, profiles, and startup commands
+- [Sprint 2 Grid Viz](project_sprint2.md) — IEEE 33-bus topology screen, GridStatusUpdate event, BottomNav shell, all new/modified files

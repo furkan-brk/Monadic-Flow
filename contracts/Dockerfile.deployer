@@ -1,0 +1,35 @@
+# contracts/Dockerfile.deployer — one-shot EnergyMarket.sol deployer
+#
+# Uses the official Foundry image (contains forge + cast + anvil).
+# Copies the compiled contracts and OZ library — no re-download needed.
+#
+# Expected environment variables (set by docker-compose):
+#   RPC_URL     — EVM RPC endpoint (e.g. http://anvil:8545)
+#   PRIVATE_KEY — Hex-encoded deployer key (Anvil account #0 for dev)
+
+FROM ghcr.io/foundry-rs/foundry:latest
+
+LABEL org.opencontainers.image.title="parallelpulse-deployer"
+LABEL org.opencontainers.image.description="One-shot EnergyMarket.sol deployer (Foundry)"
+
+WORKDIR /contracts
+
+# Copy Foundry config first (cache layer)
+COPY foundry.toml .
+
+# Copy source, deploy script, and forge dependencies
+COPY src/    src/
+COPY script/ script/
+COPY lib/    lib/
+
+# Pre-compile so the deploy script only links — fails fast on Solidity errors.
+RUN forge build --sizes
+
+# Shell-form CMD expands $RPC_URL and $PRIVATE_KEY at runtime.
+# --skip-simulation: skips gas estimation against a live node (needed for Anvil
+# first-boot where nonce may differ from cached estimate).
+CMD forge script script/Deploy.s.sol \
+        --rpc-url "${RPC_URL}" \
+        --broadcast \
+        --private-key "${PRIVATE_KEY}" \
+        --skip-simulation

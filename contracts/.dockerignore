@@ -1,0 +1,47 @@
+# contracts/.dockerignore — for Dockerfile.deployer
+#
+# Build context is contracts/; we need src/, script/, lib/, foundry.toml.
+# Exclude test artifacts, OZ docs/tests, and CI metadata.
+
+# Compiled artifacts (rebuilt inside container)
+out/
+cache/
+
+# Tests (not needed for deployment)
+test/
+
+# OZ library: keep contracts/ only, exclude their tests/scripts/docs
+lib/openzeppelin-contracts/.github/
+lib/openzeppelin-contracts/audits/
+lib/openzeppelin-contracts/test/
+lib/openzeppelin-contracts/scripts/
+lib/openzeppelin-contracts/node_modules/
+lib/openzeppelin-contracts/CHANGELOG.md
+lib/openzeppelin-contracts/CODE_OF_CONDUCT.md
+lib/openzeppelin-contracts/CONTRIBUTING.md
+lib/openzeppelin-contracts/GUIDELINES.md
+lib/openzeppelin-contracts/RELEASING.md
+lib/openzeppelin-contracts/SECURITY.md
+lib/openzeppelin-contracts/README.md
+lib/openzeppelin-contracts/FUNDING.json
+lib/openzeppelin-contracts/.husky/
+lib/openzeppelin-contracts/.changeset/
+lib/openzeppelin-contracts/.mocharc.js
+lib/openzeppelin-contracts/.solcover.js
+lib/openzeppelin-contracts/package.json
+lib/openzeppelin-contracts/package-lock.json
+lib/openzeppelin-contracts/hardhat.config.js
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+
+# Misc
+*.md
+.gitignore
+.gitmodules
+README.md
